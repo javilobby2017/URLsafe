@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Checker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-light">
+    <!-- navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white">
+        <div class="container">
+            <a class="navbar-brand" href="#">URL Checker</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Section -->
+  <div class="container text-center mt-5">
+    <h1 class="mb-3">Check if a URL is Safe</h1>
+    <p class="text-muted">Paste a link below to scan it for threats.</p>
+
+    <div class="input-group mb-3">
+      <input id="urlInput" type="text" class="form-control" placeholder="Enter a URL (e.g. http://example.com)">
+      <button id="checkBtn" class="btn btn-primary">Check URL</button>
+    </div>
+   <!-- Results --> 
+   <div id="resultArea" class="mt-4"></div>
+</div>
+
+<script>
+document.getElementById('checkBtn').addEventListener('click', async () => {
+  const url = document.getElementById('urlInput').value.trim();
+  const resultArea = document.getElementById('resultArea');
+  
+  if (!url) {
+    resultArea.innerHTML = '<div class="alert alert-warning">Please enter a URL</div>';
+    return;
+  }
+  
+  try {
+    resultArea.innerHTML = '<div class="alert alert-info">Checking URL...</div>';
+    
+    const response = await fetch('/check-url', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url })
+    });
+    
+    const result = await response.json();
+    
+    let alertClass = 'alert-success';
+    let icon = '✅';
+    let message = 'This URL appears to be safe';
+    
+    if (result.verdict === 'suspicious') {
+      alertClass = 'alert-warning';
+      icon = '⚠️';
+      message = 'This URL appears suspicious';
+    } else if (result.verdict === 'malicious') {
+      alertClass = 'alert-danger';
+      icon = '🚨';
+      message = 'This URL is potentially malicious!';
+    }
+    
+    resultArea.innerHTML = `
+      <div class="alert ${alertClass}">
+        <h5>${icon} ${message}</h5>
+        <p><strong>URL:</strong> ${result.url}</p>
+        <p><strong>Status:</strong> ${result.verdict.toUpperCase()}</p>
+      </div>
+    `;
+  } catch (error) {
+    resultArea.innerHTML = '<div class="alert alert-danger">Error checking URL. Please try again.</div>';
+    console.error('Error:', error);
+  }
+});
+</script>
+</body>
+</html>
